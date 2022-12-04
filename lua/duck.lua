@@ -1,6 +1,12 @@
 local M = {}
 M.ducks_list = {}
-local conf = {character="🦆", speed=10, width=2, height=1}
+local conf = {
+    character = "🦆",
+    speed = 10,
+    width = 2,
+    height = 1,
+    hatch_location = 'cursor',
+}
 
 -- TODO: a mode to wreck the current buffer?
 local waddle = function(duck, speed)
@@ -37,7 +43,7 @@ local waddle = function(duck, speed)
 
             config["row"] = row + 0.5 * s
             config["col"] = col + 1 * c
-            
+
             vim.api.nvim_win_set_config(duck, config)
         end
     end))
@@ -47,12 +53,38 @@ M.hatch = function(character, speed)
     local buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(buf , 0, 1, true , {character or conf.character})
 
+    local hatch_location = M.get_hatch_location()
+
     local duck = vim.api.nvim_open_win(buf, false, {
-        relative='cursor', style='minimal', row=1, col=1, width=conf.width, height=conf.height
+        relative=hatch_location.relative,
+        style='minimal',
+        row=hatch_location.row,
+        col=hatch_location.col,
+        width=conf.width,
+        height=conf.height,
     })
     vim.api.nvim_win_set_option(duck, 'winhighlight', 'Normal:Normal')
 
     waddle(duck, speed)
+end
+
+M.get_hatch_location = function ()
+    if conf.hatch_location == 'random' then
+        math.randomseed(os.time())
+        local row = math.random() * 100
+        local col = math.random() * 100
+        return {
+            relative = 'win',
+            row = row,
+            col = col,
+        }
+    end
+
+    return {
+       relative = 'cursor',
+       row = 1,
+       col = 1,
+    }
 end
 
 M.cook = function()
